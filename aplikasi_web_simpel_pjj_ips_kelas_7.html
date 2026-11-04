@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIMPEL-PJJ: Digitalisasi Presensi & Evaluasi IPS Kelas 7</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- TOP HEADER / NAV -->
+  <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+            <i data-lucide="compass" class="w-6 h-6 text-yellow-300"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-lg sm:text-xl tracking-tight leading-none">SIMPEL-PJJ</h1>
+            <p class="text-xs text-indigo-200 mt-0.5">Transformasi Presensi & Asesmen IPS Kelas VII SMP</p>
+          </div>
+        </div>
+
+        <!-- Tab Navigasi -->
+        <nav class="flex space-x-1 sm:space-x-2">
+          <button onclick="switchTab('presensi')" id="nav-presensi" class="tab-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 bg-white text-indigo-900 shadow-sm">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+            <span>Presensi</span>
+          </button>
+          <button onclick="switchTab('penugasan')" id="nav-penugasan" class="tab-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-600/60">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            <span>Penugasan Siswa</span>
+          </button>
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 text-indigo-100 hover:bg-indigo-600/60">
+            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+            <span>Dasbor Kepemimpinan</span>
+          </button>
+          <button onclick="openSheetsModal()" title="Pengaturan Google Sheets" class="px-2.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center gap-1 shadow-sm">
+            <i data-lucide="sheet" class="w-4 h-4"></i>
+            <span class="hidden md:inline">Google Sheets</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- MODAL INTEGRASI GOOGLE SHEETS -->
+  <div id="sheets-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+            <i data-lucide="sheet" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Koneksi Google Spreadsheet</h3>
+            <p class="text-xs text-slate-500">Kirim data presensi & evaluasi langsung ke cloud</p>
+          </div>
+        </div>
+        <button onclick="closeSheetsModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Web App URL (Google Apps Script)</label>
+          <input type="url" id="sheets-webhook-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <p class="text-[11px] text-slate-400 mt-1">Tempelkan URL Web App hasil Deploy Google Apps Script di sini.</p>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+          <p class="font-bold text-slate-700">Panduan Singkat:</p>
+          <ol class="list-decimal list-inside text-slate-600 space-y-1">
+            <li>Buka Google Spreadsheet baru.</li>
+            <li>Pilih menu <b>Ekstensi &gt; Apps Script</b>.</li>
+            <li>Salin file skrip Google Apps Script yang disediakan.</li>
+            <li>Klik <b>Deploy &gt; New Deployment &gt; Web App</b> (Akses: <i>Anyone</i>).</li>
+            <li>Salin URL Web App dan rekatkan ke kolom di atas.</li>
+          </ol>
+        </div>
+
+        <div id="sheets-status-msg" class="hidden p-2.5 rounded-lg text-xs font-semibold"></div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="testSheetsConnection()" class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition">
+            Uji Koneksi
+          </button>
+          <button onclick="saveSheetsUrl()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition shadow-sm">
+            Simpan Konfigurasi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: PRESENSI DIGITAL & REKAP KELAS      -->
+    <!-- ========================================== -->
+    <section id="tab-presensi" class="tab-content space-y-6">
+      <!-- Banner Sambutan & Indikator -->
+      <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-semibold uppercase tracking-wider mb-2">
+            Materi: Ruang, Lingkungan, & Kebutuhan Hidup
+          </span>
+          <h2 class="text-2xl font-bold">Portal Presensi Terpadu Siswa</h2>
+          <p class="text-indigo-100 text-sm mt-1 max-w-2xl">
+            Sistem pengumpulan kehadiran mandiri nir-kertas untuk pemantauan disiplin belajar siswa kelas 7 secara real-time.
+          </p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20 text-center">
+          <p class="text-xs text-indigo-200 uppercase font-semibold">Status Sistem</p>
+          <p class="text-lg font-bold text-green-300 flex items-center justify-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span> Sinkron Aktif
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Form Presensi Siswa -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <i data-lucide="edit-3" class="w-5 h-5 text-indigo-600"></i>
+            <h3 class="font-bold text-slate-800 text-base">Isi Presensi Harian Siswa</h3>
+          </div>
+
+          <form id="attendance-form" onsubmit="handleAttendanceSubmit(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Pilih Siswa</label>
+              <select id="presensi-nama" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="" disabled selected>-- Pilih Nama Terdaftar --</option>
+                <option value="Dewi">Dewi (NISN: 240701)</option>
+                <option value="Ahna">Ahna (NISN: 240702)</option>
+                <option value="Ipis Santuli">Ipis Santuli (NISN: 240703)</option>
+                <option value="Bayu">Bayu (NISN: 240704)</option>
+                <option value="Giving">Giving (NISN: 240705)</option>
+                <option value="Ukap">Ukap (NISN: 240706)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Status Kehadiran</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 text-sm">
+                  <input type="radio" name="status_kehadiran" value="Hadir" checked class="text-indigo-600 focus:ring-indigo-500">
+                  <span class="font-medium text-slate-700">Hadir</span>
+                </label>
+                <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 text-sm">
+                  <input type="radio" name="status_kehadiran" value="Sakit" class="text-indigo-600 focus:ring-indigo-500">
+                  <span class="font-medium text-slate-700">Sakit</span>
+                </label>
+                <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 text-sm">
+                  <input type="radio" name="status_kehadiran" value="Izin" class="text-indigo-600 focus:ring-indigo-500">
+                  <span class="font-medium text-slate-700">Izin</span>
+                </label>
+                <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 text-sm">
+                  <input type="radio" name="status_kehadiran" value="Alpa" class="text-indigo-600 focus:ring-indigo-500">
+                  <span class="font-medium text-slate-700">Alpa</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Koneksi / Perangkat Belajar</label>
+              <select id="presensi-perangkat" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="Akses Lancar (Ponsel/Laptop)">Akses Lancar (Ponsel/Laptop)</option>
+                <option value="Sinyal Fluktuatif">Sinyal Fluktuatif</option>
+                <option value="Kuota Terbatas">Kuota Terbatas (Perlu Mode Ringan)</option>
+                <option value="Gawai Bergantian">Gawai Bergantian dengan Keluarga</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Catatan Tambahan (Opsional)</label>
+              <input type="text" id="presensi-catatan" placeholder="Contoh: Mengikuti sesi via hotspot tetangga" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+              Simpan Presensi
+            </button>
+          </form>
+
+          <div id="attendance-feedback" class="mt-3 hidden p-3 rounded-xl text-xs font-semibold"></div>
+        </div>
+
+        <!-- Rekapitulasi Presensi Digital Siswa (Table) -->
+        <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-2">
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Rekap Master Presensi Terintegrasi</h3>
+                <p class="text-xs text-slate-500">Mencatat kehadiran & kondisi koneksi siswa kelompok percontohan</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="syncAllToSheets()" id="btn-sync-all" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold rounded-lg flex items-center gap-1 transition">
+                  <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i> Kirim ke Spreadsheet
+                </button>
+                <button onclick="resetDefaultAttendance()" class="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-medium rounded-lg flex items-center gap-1 transition">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+                </button>
+                <button onclick="exportToCSV()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg flex items-center gap-1 transition shadow-sm">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i> CSV
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-100/70 text-slate-700 font-bold uppercase tracking-wider">
+                    <th class="py-2.5 px-3 rounded-l-lg">Siswa</th>
+                    <th class="py-2.5 px-3">Status</th>
+                    <th class="py-2.5 px-3">Waktu Respon</th>
+                    <th class="py-2.5 px-3">Kondisi Akses / Perangkat</th>
+                    <th class="py-2.5 px-3 rounded-r-lg text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="attendance-table-body" class="divide-y divide-slate-100">
+                  <!-- Data digenerate via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rangkuman Mini Presensi -->
+          <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-4 gap-2 text-center text-xs">
+            <div class="bg-emerald-50 text-emerald-800 p-2 rounded-xl">
+              <span class="block font-bold text-lg" id="stat-hadir">6</span>
+              <span>Hadir</span>
+            </div>
+            <div class="bg-amber-50 text-amber-800 p-2 rounded-xl">
+              <span class="block font-bold text-lg" id="stat-sakit">0</span>
+              <span>Sakit</span>
+            </div>
+            <div class="bg-blue-50 text-blue-800 p-2 rounded-xl">
+              <span class="block font-bold text-lg" id="stat-izin">0</span>
+              <span>Izin</span>
+            </div>
+            <div class="bg-rose-50 text-rose-800 p-2 rounded-xl">
+              <span class="block font-bold text-lg" id="stat-alpa">0</span>
+              <span>Alpa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: PENUGASAN SISWA (PG 10 & JODOH KATA) -->
+    <!-- ========================================== -->
+    <section id="tab-penugasan" class="tab-content hidden space-y-6">
+      
+      <!-- Sub-Header Penugasan -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">Formatif IPS 7</span>
+            <span class="text-xs text-slate-500">Bobot: PG (60%) + Menjodohkan (40%)</span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800 mt-1">Uji Pemahaman Konsep Ruang, Lingkungan & Ekonomi</h2>
+        </div>
+        
+        <!-- Pemilih Identitas Pengerjaan -->
+        <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <label class="text-xs font-bold text-slate-600 whitespace-nowrap">Nama Anda:</label>
+          <select id="exam-student-select" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <option value="Dewi">Dewi (240701)</option>
+            <option value="Ahna">Ahna (240702)</option>
+            <option value="Ipis Santuli">Ipis Santuli (240703)</option>
+            <option value="Bayu">Bayu (240704)</option>
+            <option value="Giving">Giving (240705)</option>
+            <option value="Ukap">Ukap (240706)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FORM UJIAN -->
+      <form id="evaluation-form" onsubmit="handleEvaluationSubmit(event)" class="space-y-8">
+        
+        <!-- BAGIAN 1: 10 PILIHAN GANDA -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between pb-3 mb-6 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-sm">A</span>
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Bagian I: 10 Butir Pilihan Ganda Kontekstual</h3>
+                <p class="text-xs text-slate-500">Pilihlah salah satu opsi jawaban yang paling tepat</p>
+              </div>
+            </div>
+            <span class="text-xs font-medium bg-slate-100 px-3 py-1 rounded-full text-slate-600">10 Soal &bull; 60 Poin</span>
+          </div>
+
+          <div id="quiz-container" class="space-y-6">
+            <!-- Soal 1 s/d 10 akan dimuat via JS -->
+          </div>
+        </div>
+
+        <!-- BAGIAN 2: PENJODOHAN KATA (MATCHING) -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between pb-3 mb-6 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 bg-purple-600 text-white rounded-lg flex items-center justify-center font-bold text-sm">B</span>
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Bagian II: Penjodohan Konsep IPS</h3>
+                <p class="text-xs text-slate-500">Pasangkan istilah di kolom kiri dengan definisi/karakteristik yang tepat di dropdown</p>
+              </div>
+            </div>
+            <span class="text-xs font-medium bg-purple-50 text-purple-700 px-3 py-1 rounded-full font-bold">5 Pasangan &bull; 40 Poin</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="matching-container">
+            <!-- Item penjodohan dimuat otomatis via script -->
+          </div>
+        </div>
+
+        <!-- Submit & Result Box -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-100 p-4 rounded-2xl">
+          <div class="text-xs text-slate-600">
+            Pastikan seluruh 10 soal pilihan ganda dan 5 pasangan kata telah dijawab sebelum menekan tombol kirim.
+          </div>
+          <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            Kirimkan Hasil Evaluasi
+          </button>
+        </div>
+      </form>
+
+      <!-- Modal/Notifikasi Hasil Skor Siswa -->
+      <div id="evaluation-result" class="hidden bg-white border-2 border-indigo-200 rounded-2xl p-6 shadow-xl transition">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Hasil Formatif Siswa</span>
+            <h3 class="text-xl font-black text-slate-800" id="result-student-name">Nama Siswa</h3>
+            <p class="text-xs text-slate-500" id="result-timestamp">Diselesaikan pada: -</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="text-center bg-slate-50 px-4 py-2 rounded-xl">
+              <span class="text-xs text-slate-500 block font-semibold">Skor PG</span>
+              <span class="text-lg font-bold text-indigo-700" id="result-pg-score">0 / 10</span>
+            </div>
+            <div class="text-center bg-slate-50 px-4 py-2 rounded-xl">
+              <span class="text-xs text-slate-500 block font-semibold">Skor Jodoh</span>
+              <span class="text-lg font-bold text-purple-700" id="result-match-score">0 / 5</span>
+            </div>
+            <div class="text-center bg-indigo-600 text-white px-5 py-2 rounded-xl shadow-sm">
+              <span class="text-xs text-indigo-200 block font-semibold">Nilai Akhir</span>
+              <span class="text-2xl font-black" id="result-total-score">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4" id="result-feedback-container">
+          <!-- Ulasan tindak lanjut & kunci jawaban singkat -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: DASBOR KEPEMIMPINAN SEKOLAH         -->
+    <!-- ========================================== -->
+    <section id="tab-dashboard" class="tab-content hidden space-y-6">
+      <!-- Title & Keterangan -->
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">Dasbor Kepemimpinan & Pengambilan Keputusan (SIMPEL-PJJ)</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Analitik pemantauan kehadiran dan capaian hasil belajar untuk intervensi dini manajemen sekolah</p>
+      </div>
+
+      <!-- KPI Metrics Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Tingkat Kehadiran</p>
+            <h3 class="text-2xl font-extrabold text-slate-800 mt-1" id="kpi-attendance-rate">100%</h3>
+            <span class="text-[11px] text-emerald-600 font-medium">&bull; 6 dari 6 Siswa Terdata</span>
+          </div>
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="users" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Rata-Rata Nilai Formatif</p>
+            <h3 class="text-2xl font-extrabold text-indigo-600 mt-1" id="kpi-avg-score">91.3</h3>
+            <span class="text-[11px] text-indigo-500 font-medium">&bull; KKM IPS: 75.0</span>
+          </div>
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="award" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Efisiensi Administrasi</p>
+            <h3 class="text-2xl font-extrabold text-blue-600 mt-1">92%</h3>
+            <span class="text-[11px] text-blue-500 font-medium">&bull; Hemat 110 Menit/Pekan</span>
+          </div>
+          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="clock" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Ketuntasan Tugas</p>
+            <h3 class="text-2xl font-extrabold text-purple-600 mt-1" id="kpi-completion-rate">100%</h3>
+            <span class="text-[11px] text-purple-500 font-medium">&bull; Selesai Tepat Waktu</span>
+          </div>
+          <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="check-square" class="w-6 h-6"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabel Rincian Capaian Peserta Didik Percontohan -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-100 gap-2">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Rekapitulasi Capaian Terpadu Peserta Didik</h3>
+            <p class="text-xs text-slate-500">Mengkorelasikan status presensi, hasil formatif, dan rekomendasi intervensi guru</p>
+          </div>
+          <div class="text-xs text-slate-400">Data Terupdate Real-Time</div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-100/70 text-slate-700 font-bold uppercase tracking-wider">
+                <th class="py-2.5 px-3 rounded-l-lg">Siswa</th>
+                <th class="py-2.5 px-3">Presensi</th>
+                <th class="py-2.5 px-3">Skor PG (/10)</th>
+                <th class="py-2.5 px-3">Skor Jodoh (/5)</th>
+                <th class="py-2.5 px-3">Nilai Akhir</th>
+                <th class="py-2.5 px-3">Status KKM</th>
+                <th class="py-2.5 px-3 rounded-r-lg">Rekomendasi Kepemimpinan / Guru</th>
+              </tr>
+            </thead>
+            <tbody id="leadership-table-body" class="divide-y divide-slate-100">
+              <!-- Baris siswa diisi lewat JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Catatan Tindak Lanjut Kepala Sekolah -->
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-lg">
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="file-text" class="w-5 h-5 text-yellow-400"></i>
+          <h4 class="font-bold text-base">Catatan Refleksi & Tindak Lanjut Kepala Sekolah</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300">
+          <div class="bg-white/10 p-4 rounded-xl border border-white/10">
+            <p class="font-bold text-white mb-1">1. Efektivitas Waktu Belajar</p>
+            <p>Digitalisasi presensi berhasil memangkas waktu administratif guru di awal kelas PJJ sebesar 15 menit, dialihkan menjadi penguatan materi konsep ruang.</p>
+          </div>
+          <div class="bg-white/10 p-4 rounded-xl border border-white/10">
+            <p class="font-bold text-white mb-1">2. Pendampingan Kuota Ringan</p>
+            <p>Siswa seperti Ipis Santuli dan Giving dengan kendala jaringan tetap terakomodasi melalui format form ringan tanpa konten video berat.</p>
+          </div>
+          <div class="bg-white/10 p-4 rounded-xl border border-white/10">
+            <p class="font-bold text-white mb-1">3. Skalabilitas Program</p>
+            <p>Model SIMPEL-PJJ siap direplikasi ke seluruh kelas 7, 8, dan 9 dengan pelatihan singkat bagi MGMP IPS pada pekan ke-4.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>&copy; SIMPEL-PJJ &bull; Proyek Transformasi Kepemimpinan Sekolah Mata Pelajaran IPS Kelas VII</p>
+  </footer>
+
+  <!-- ================================================================= -->
+  <!-- JAVASCRIPT LOGIC                                                  -->
+  <!-- ================================================================= -->
+  <script>
+    // DATA DEFAULT AWAL SESUAI PROYEK
+    const initialStudents = [
+      { id: "240701", name: "Dewi", status: "Hadir", time: "07:32 WIB", device: "Akses Lancar (Ponsel)", note: "Tepat waktu", pgScore: 9, matchScore: 5, totalScore: 94 },
+      { id: "240702", name: "Ahna", status: "Hadir", time: "07:35 WIB", device: "Akses Lancar (Laptop)", note: "Tutor sebaya", pgScore: 10, matchScore: 5, totalScore: 100 },
+      { id: "240703", name: "Ipis Santuli", status: "Hadir", time: "07:41 WIB", device: "Kuota Terbatas (Perlu Mode Ringan)", note: "Mode hemat data", pgScore: 8, matchScore: 4, totalScore: 80 },
+      { id: "240704", name: "Bayu", status: "Hadir", time: "07:38 WIB", device: "Akses Lancar (Ponsel/Laptop)", note: "Siap berdiskusi", pgScore: 9, matchScore: 4, totalScore: 86 },
+      { id: "240705", name: "Giving", status: "Hadir", time: "07:45 WIB", device: "Sinyal Fluktuatif", note: "Fleksibilitas waktu", pgScore: 8, matchScore: 5, totalScore: 88 },
+      { id: "240706", name: "Ukap", status: "Hadir", time: "07:30 WIB", device: "Akses Lancar (Laptop)", note: "Koordinator kelompok", pgScore: 10, matchScore: 5, totalScore: 100 }
+    ];
+
+    // BANK SOAL PILIHAN GANDA (10 SOAL)
+    const mcqQuestions = [
+      {
+        id: 1,
+        question: "Perbedaan potensi sumber daya alam antara wilayah pesisir penghasil ikan laut dan wilayah pegunungan penghasil aneka sayuran mendorong terjadinya...",
+        options: [
+          { key: "A", text: "Isolasi geografis antarmasyarakat" },
+          { key: "B", text: "Interaksi perdagangan antarwilayah (komplementaritas)" },
+          { key: "C", text: "Penurunan harga komoditas pangan pokok secara ekstrem" },
+          { key: "D", text: "Penyeragaman mata pencaharian penduduk" }
+        ],
+        answer: "B",
+        explanation: "Kondisi saling melengkapi (regional complementarity) memicu pertukaran dan mobilitas barang antarruang."
+      },
+      {
+        id: 2,
+        question: "Komponen peta yang memuat keterangan semua objek atau simbol visual (seperti batas wilayah, jalan raya, dan perairan) dinamakan...",
+        options: [
+          { key: "A", text: "Orientasi / Mata Angin" },
+          { key: "B", text: "Skala Numerik" },
+          { key: "C", text: "Legenda" },
+          { key: "D", text: "Inset Peta" }
+        ],
+        answer: "C",
+        explanation: "Legenda merupakan kolom kunci pembacaan simbol-simbol peta."
+      },
+      {
+        id: 3,
+        question: "Jarak Kota A ke Kota B di peta adalah 5 cm. Jika skala peta tersebut adalah 1 : 200.000, maka jarak sebenarnya di lapangan adalah...",
+        options: [
+          { key: "A", text: "1 km" },
+          { key: "B", text: "10 km" },
+          { key: "C", text: "100 km" },
+          { key: "D", text: "1.000 km" }
+        ],
+        answer: "B",
+        explanation: "Jarak sebenarnya = 5 cm × 200.000 = 1.000.000 cm = 10 km."
+      },
+      {
+        id: 4,
+        question: "Letak astronomis Indonesia pada rentang 6°LU - 11°LS dan 95°BT - 141°BT menyebabkan wilayah Indonesia beriklim tropis dengan ciri utama...",
+        options: [
+          { key: "A", text: "Curah hujan dan penyinaran matahari tinggi sepanjang tahun" },
+          { key: "B", text: "Mengalami empat musim yang silih berganti" },
+          { key: "C", text: "Suhu rata-rata tahunan di bawah 10° Celsius" },
+          { key: "D", text: "Kelembapan udara selalu kering" }
+        ],
+        answer: "A",
+        explanation: "Wilayah garis ekuator selalu mendapat pemanasan matahari optimal dan kelembapan tinggi."
+      },
+      {
+        id: 5,
+        question: "Fungsi ekologis utama hutan mangrove (bakau) di wilayah pesisir pantai Indonesia adalah...",
+        options: [
+          { key: "A", text: "Bahan mentah utama industri kertas bermutu tinggi" },
+          { key: "B", text: "Menahan abrasi gelombang pantai dan tempat pemijahan biota laut" },
+          { key: "C", text: "Lahan pembuangan akhir limbah organik cair" },
+          { key: "D", text: "Mempercepat penguapan air laut ke udara" }
+        ],
+        answer: "B",
+        explanation: "Sistem perakaran mangrove memecah energi gelombang untuk mencegah erosi pantai dan habitat fauna air."
+      },
+      {
+        id: 6,
+        question: "Pemanfaatan sumber daya alam yang selaras dengan prinsip pembangunan berkelanjutan (sustainable development) adalah...",
+        options: [
+          { key: "A", text: "Menangkap ikan dengan bahan kimia ramah lingkungan" },
+          { key: "B", text: "Menerapkan metode tebang pilih dan reboisasi pohon terencana" },
+          { key: "C", text: "Membuka lahan gambut secara massal dengan pembakaran cepat" },
+          { key: "D", text: "Menguras seluruh cadangan tambang secara maksimal sekaligus" }
+        ],
+        answer: "B",
+        explanation: "Tebang pilih dan peremajaan menjamin pasokan kayu lestari untuk generasi yang akan datang."
+      },
+      {
+        id: 7,
+        question: "Seragam dan perlengkapan sekolah wajib yang dibeli orang tua untuk anaknya yang sedang menempuh pendidikan tergolong kebutuhan...",
+        options: [
+          { key: "A", text: "Primer" },
+          { key: "B", text: "Sekunder" },
+          { key: "C", text: "Tersier" },
+          { key: "D", text: "Kolektif Mewah" }
+        ],
+        answer: "A",
+        explanation: "Pakaian sekolah merupakan sandang pokok yang mutlak diperlukan siswa agar dapat belajar."
+      },
+      {
+        id: 8,
+        question: "Seorang pedagang memilih menyewa kios tepat di depan gerbang stasiun komuter yang ramai meski sewanya mahal. Tindakan ini mencerminkan...",
+        options: [
+          { key: "A", text: "Motif sosial nirlaba" },
+          { key: "B", text: "Penerapan prinsip ekonomi secara rasional" },
+          { key: "C", text: "Tindakan spekulasi tanpa kalkulasi modal" },
+          { key: "D", text: "Hukum penawaran elastis sempurna" }
+        ],
+        answer: "B",
+        explanation: "Prinsip ekonomi memperhitungkan pengorbanan terukur untuk meraih omzet/keuntungan optimum dari ramainya calon pembeli."
+      },
+      {
+        id: 9,
+        question: "Bentuk interaksi sosial asosiatif yang ditunjukkan dalam kehidupan bermasyarakat sehari-hari adalah...",
+        options: [
+          { key: "A", text: "Saling menyebarkan berita bohong antarcalon kandidat" },
+          { key: "B", text: "Persaingan ketat dalam penjualan barang impor" },
+          { key: "C", text: "Warga bergotong-royong membersihkan parit menjelang musim hujan" },
+          { key: "D", text: "Sengketa tapal batas tanah pekarangan antartetangga" }
+        ],
+        answer: "C",
+        explanation: "Gotong royong merupakan proses kooperasi (kerja sama) yang merekatkan relasi sosial warga."
+      },
+      {
+        id: 10,
+        question: "Lembaga sosial pertama dan terpenting dalam pembentukan karakter, moral dasar, serta perlindungan awal anak adalah...",
+        options: [
+          { key: "A", text: "Lembaga Politik" },
+          { key: "B", text: "Lembaga Ekonomi" },
+          { key: "C", text: "Lembaga Keluarga" },
+          { key: "D", text: "Lembaga Peradilan" }
+        ],
+        answer: "C",
+        explanation: "Keluarga berperan sebagai agen sosialisasi primer penentu pondasi watak dan kebiasaan anak."
+      }
+    ];
+
+    // BANK PENJODOHAN KATA (5 PASANG)
+    const matchingItems = [
+      { id: "m1", term: "Letak Geologis", answerKey: "B", matchDesc: "Letak wilayah dipandang dari struktur bebatuan dan susunan lempeng tektonik bumi" },
+      { id: "m2", term: "Skala Peta", answerKey: "C", matchDesc: "Perbandingan jarak pada gambar datar dengan jarak horizontal sebenarnya" },
+      { id: "m3", term: "Kelangkaan (Scarcity)", answerKey: "A", matchDesc: "Kondisi saat kebutuhan manusia tidak terbatas sementara alat pemuasnya terbatas" },
+      { id: "m4", term: "Sosialisasi", answerKey: "D", matchDesc: "Proses belajar individu mengenal nilai, kaidah norma, dan peran sosial di masyarakat" },
+      { id: "m5", term: "Konsumsi", answerKey: "E", matchDesc: "Aktivitas memakai atau menghabiskan nilai guna suatu barang/jasa guna memenuhi kebutuhan" }
+    ];
+
+    const matchingOptionsDef = [
+      { key: "A", text: "Keadaan saat kebutuhan manusia tidak terbatas sementara alat pemuasnya terbatas" },
+      { key: "B", text: "Letak wilayah dipandang dari struktur bebatuan dan susunan lempeng tektonik bumi" },
+      { key: "C", text: "Perbandingan jarak pada gambar datar dengan jarak horizontal sebenarnya" },
+      { key: "D", text: "Proses belajar individu mengenal nilai, kaidah norma, dan peran sosial di masyarakat" },
+      { key: "E", text: "Aktivitas memakai atau menghabiskan nilai guna suatu barang/jasa guna memenuhi kebutuhan" }
+    ];
+
+    // STATE UTAMA SISTEM
+    let studentsData = JSON.parse(localStorage.getItem("simpel_pjj_students")) || initialStudents;
+    let googleSheetsUrl = localStorage.getItem("simpel_pjj_sheets_url") || "";
+
+    // INISIALISASI SAAT HALAMAN DIMUAT
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      renderAttendanceTable();
+      renderQuizSection();
+      renderMatchingSection();
+      renderLeadershipDashboard();
+
+      if(document.getElementById("sheets-webhook-url")) {
+        document.getElementById("sheets-webhook-url").value = googleSheetsUrl;
+      }
+    });
+
+    // FUNGSI MODAL PENGATURAN GOOGLE SHEETS
+    function openSheetsModal() {
+      document.getElementById("sheets-modal").classList.remove("hidden");
+      document.getElementById("sheets-webhook-url").value = googleSheetsUrl;
+      lucide.createIcons();
+    }
+
+    function closeSheetsModal() {
+      document.getElementById("sheets-modal").classList.add("hidden");
+    }
+
+    function saveSheetsUrl() {
+      const url = document.getElementById("sheets-webhook-url").value.trim();
+      googleSheetsUrl = url;
+      localStorage.setItem("simpel_pjj_sheets_url", url);
+      
+      const msg = document.getElementById("sheets-status-msg");
+      msg.className = "p-2.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200";
+      msg.innerText = "URL Google Sheets berhasil disimpan!";
+      msg.classList.remove("hidden");
+      setTimeout(() => {
+        msg.classList.add("hidden");
+        closeSheetsModal();
+      }, 1500);
+    }
+
+    async function sendToGoogleSheets(payload) {
+      if (!googleSheetsUrl) {
+        console.warn("URL Google Sheets belum dikonfigurasi.");
+        return { success: false, reason: "NO_URL" };
+      }
+
+      try {
+        // Menggunakan text/plain agar browser tidak memicu CORS preflight (OPTIONS)
+        // yang sering digagalkan oleh server Google Apps Script
+        await fetch(googleSheetsUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(payload)
+        });
+        return { success: true };
+      } catch (err) {
+        console.error("Gagal mengirim data ke Google Sheets:", err);
+        return { success: false, reason: err.message };
+      }
+    }
+
+    async function testSheetsConnection() {
+      const url = document.getElementById("sheets-webhook-url").value.trim();
+      const msg = document.getElementById("sheets-status-msg");
+      if(!url) {
+        msg.className = "p-2.5 rounded-lg text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200";
+        msg.innerText = "Silakan masukkan URL Web App Apps Script terlebih dahulu!";
+        msg.classList.remove("hidden");
+        return;
+      }
+
+      msg.className = "p-2.5 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200";
+      msg.innerText = "Menguji transmisi sinyal data...";
+      msg.classList.remove("hidden");
+
+      try {
+        await fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ type: "ping", timestamp: new Date().toISOString() })
+        });
+        msg.className = "p-2.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200";
+        msg.innerText = "Data uji berhasil dikirim! Silakan periksa apakah sheet terbentuk di Google Spreadsheet Anda.";
+      } catch (e) {
+        msg.className = "p-2.5 rounded-lg text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200";
+        msg.innerText = "Gagal menghubungi endpoint: " + e.message;
+      }
+    }
+
+    async function syncAllToSheets() {
+      const btn = document.getElementById("btn-sync-all");
+      if(!googleSheetsUrl) {
+        openSheetsModal();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Sinkronisasi...`;
+      lucide.createIcons();
+
+      const payload = {
+        type: "batch_sync",
+        students: studentsData,
+        timestamp: new Date().toISOString()
+      };
+
+      await sendToGoogleSheets(payload);
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Terkirim!`;
+        lucide.createIcons();
+        setTimeout(() => {
+          btn.innerHTML = `<i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i> Kirim ke Spreadsheet`;
+          lucide.createIcons();
+        }, 3000);
+      }, 1000);
+    }
+
+    // SISTEM TAB
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("bg-white", "text-indigo-900", "shadow-sm");
+        btn.classList.add("text-indigo-100");
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.remove("hidden");
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      activeBtn.classList.remove("text-indigo-100");
+      activeBtn.classList.add("bg-white", "text-indigo-900", "shadow-sm");
+      
+      lucide.createIcons();
+    }
+
+    // RENDER TABEL PRESENSI
+    function renderAttendanceTable() {
+      const tbody = document.getElementById("attendance-table-body");
+      tbody.innerHTML = "";
+
+      let hadir = 0, sakit = 0, izin = 0, alpa = 0;
+
+      studentsData.forEach(item => {
+        if(item.status === "Hadir") hadir++;
+        else if(item.status === "Sakit") sakit++;
+        else if(item.status === "Izin") izin++;
+        else if(item.status === "Alpa") alpa++;
+
+        let badgeColor = "bg-emerald-100 text-emerald-800";
+        if(item.status === "Sakit") badgeColor = "bg-amber-100 text-amber-800";
+        if(item.status === "Izin") badgeColor = "bg-blue-100 text-blue-800";
+        if(item.status === "Alpa") badgeColor = "bg-rose-100 text-rose-800";
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-800">${item.name}</div>
+            <div class="text-[11px] text-slate-400">NISN: ${item.id}</div>
+          </td>
+          <td class="py-3 px-3">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeColor}">
+              ${item.status}
+            </span>
+          </td>
+          <td class="py-3 px-3 text-slate-600 font-mono text-[11px]">${item.time}</td>
+          <td class="py-3 px-3">
+            <div class="text-slate-700 font-medium">${item.device}</div>
+            <div class="text-[11px] text-slate-400 italic">${item.note ? `"${item.note}"` : '-'}</div>
+          </td>
+          <td class="py-3 px-3 text-right">
+            <button onclick="toggleQuickStatus('${item.id}')" title="Ubah Status Cepat" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold transition">
+              Ubah Status
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("stat-hadir").innerText = hadir;
+      document.getElementById("stat-sakit").innerText = sakit;
+      document.getElementById("stat-izin").innerText = izin;
+      document.getElementById("stat-alpa").innerText = alpa;
+      
+      saveData();
+    }
+
+    // TOGGLE STATUS PRESENSI CEPAT
+    function toggleQuickStatus(id) {
+      const idx = studentsData.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        const statuses = ["Hadir", "Sakit", "Izin", "Alpa"];
+        const curr = statuses.indexOf(studentsData[idx].status);
+        studentsData[idx].status = statuses[(curr + 1) % statuses.length];
+        renderAttendanceTable();
+        renderLeadershipDashboard();
+      }
+    }
+
+    // FORM PRESENSI SUBMIT
+    function handleAttendanceSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById("presensi-nama").value;
+      const status = document.querySelector('input[name="status_kehadiran"]:checked').value;
+      const device = document.getElementById("presensi-perangkat").value;
+      const note = document.getElementById("presensi-catatan").value;
+
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+
+      const studentIndex = studentsData.findIndex(s => s.name === name);
+      let nisn = "";
+      if(studentIndex !== -1) {
+        studentsData[studentIndex].status = status;
+        studentsData[studentIndex].device = device;
+        studentsData[studentIndex].time = timeStr;
+        if(note) studentsData[studentIndex].note = note;
+        nisn = studentsData[studentIndex].id;
+      }
+
+      renderAttendanceTable();
+      renderLeadershipDashboard();
+
+      // Kirim real-time ke Google Spreadsheet
+      sendToGoogleSheets({
+        type: "presensi",
+        nisn: nisn,
+        nama: name,
+        status: status,
+        waktu: timeStr,
+        perangkat: device,
+        catatan: note || "-"
+      });
+
+      const fb = document.getElementById("attendance-feedback");
+      fb.className = "mt-3 p-3 rounded-xl text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200";
+      fb.innerHTML = `Presensi ananda <b>${name}</b> tersimpan (${status} - ${timeStr})${googleSheetsUrl ? ' & disinkronkan ke Spreadsheet.' : '.'}`;
+      fb.classList.remove("hidden");
+
+      setTimeout(() => fb.classList.add("hidden"), 4000);
+    }
+
+    // RESET DEFAULT
+    function resetDefaultAttendance() {
+      studentsData = JSON.parse(JSON.stringify(initialStudents));
+      renderAttendanceTable();
+      renderLeadershipDashboard();
+      localStorage.removeItem("simpel_pjj_students");
+    }
+
+    // SIMPAN LOCALSTORAGE
+    function saveData() {
+      localStorage.setItem("simpel_pjj_students", JSON.stringify(studentsData));
+    }
+
+    // EXPORT DATA CSV
+    function exportToCSV() {
+      let csv = "NISN,Nama,Status Kehadiran,Waktu Respon,Perangkat/Kondisi,Skor PG,Skor Jodoh,Nilai Akhir\n";
+      studentsData.forEach(s => {
+        csv += `"${s.id}","${s.name}","${s.status}","${s.time}","${s.device}",${s.pgScore},${s.matchScore},${s.totalScore}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Rekap_SIMPEL_PJJ_Kelas7_IPS.csv`;
+      link.click();
+    }
+
+    // RENDER SOAL PILIHAN GANDA (10 SOAL)
+    function renderQuizSection() {
+      const container = document.getElementById("quiz-container");
+      container.innerHTML = "";
+
+      mcqQuestions.forEach((q, index) => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3";
+        
+        let optionsHtml = "";
+        q.options.forEach(opt => {
+          optionsHtml += `
+            <label class="flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-white hover:bg-indigo-50/40 cursor-pointer transition text-xs sm:text-sm">
+              <input type="radio" name="pg_${q.id}" value="${opt.key}" required class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+              <span class="text-slate-700"><b>${opt.key}.</b> ${opt.text}</span>
+            </label>
+          `;
+        });
+
+        itemDiv.innerHTML = `
+          <div class="flex items-start gap-2">
+            <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs flex-shrink-0">${index + 1}</span>
+            <p class="font-medium text-slate-800 text-xs sm:text-sm leading-relaxed">${q.question}</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 pl-8">
+            ${optionsHtml}
+          </div>
+        `;
+        container.appendChild(itemDiv);
+      });
+    }
+
+    // RENDER PENJODOHAN KATA
+    function renderMatchingSection() {
+      const container = document.getElementById("matching-container");
+      container.innerHTML = "";
+
+      matchingItems.forEach((item, idx) => {
+        let selectOptions = `<option value="" disabled selected>-- Pilih Definisi --</option>`;
+        matchingOptionsDef.forEach(opt => {
+          selectOptions += `<option value="${opt.key}">[${opt.key}] ${opt.text}</option>`;
+        });
+
+        const card = document.createElement("div");
+        card.className = "p-4 rounded-xl border border-purple-100 bg-purple-50/40 space-y-2";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Pasangan ${idx + 1}</span>
+            <span class="text-[11px] text-slate-400">Konsep Materi</span>
+          </div>
+          <p class="font-bold text-slate-800 text-sm">${item.term}</p>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Padankan dengan arti:</label>
+            <select name="match_${item.id}" required class="w-full bg-white border border-purple-200 rounded-lg p-2 text-xs font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none">
+              ${selectOptions}
+            </select>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // SUBMIT PENUGASAN EVALUASI
+    function handleEvaluationSubmit(e) {
+      e.preventDefault();
+
+      const studentName = document.getElementById("exam-student-select").value;
+      const formData = new FormData(e.target);
+
+      // Hitung Skor Pilihan Ganda (Maks 10)
+      let pgCorrect = 0;
+      mcqQuestions.forEach(q => {
+        const userChoice = formData.get(`pg_${q.id}`);
+        if(userChoice === q.answer) {
+          pgCorrect++;
+        }
+      });
+
+      // Hitung Skor Penjodohan (Maks 5)
+      let matchCorrect = 0;
+      matchingItems.forEach(m => {
+        const userMatch = formData.get(`match_${m.id}`);
+        if(userMatch === m.answerKey) {
+          matchCorrect++;
+        }
+      });
+
+      // Rumus: (PG/10 * 60) + (Match/5 * 40)
+      const finalScore = Math.round(((pgCorrect / 10) * 60) + ((matchCorrect / 5) * 40));
+
+      // Simpan ke array peserta
+      const idx = studentsData.findIndex(s => s.name === studentName);
+      let studentId = "";
+      if(idx !== -1) {
+        studentsData[idx].pgScore = pgCorrect;
+        studentsData[idx].matchScore = matchCorrect;
+        studentsData[idx].totalScore = finalScore;
+        studentId = studentsData[idx].id;
+      }
+
+      saveData();
+      renderLeadershipDashboard();
+
+      // Kirim Hasil Evaluasi ke Google Spreadsheet
+      sendToGoogleSheets({
+        type: "evaluasi",
+        nisn: studentId,
+        nama: studentName,
+        pgScore: pgCorrect,
+        matchScore: matchCorrect,
+        totalScore: finalScore,
+        statusKKM: finalScore >= 75 ? "TUNTAS" : "REMEDIAL",
+        waktu: new Date().toLocaleString('id-ID')
+      });
+
+      // Tampilkan Hasil Detail
+      const resultBox = document.getElementById("evaluation-result");
+      document.getElementById("result-student-name").innerText = `Hasil Evaluasi: ${studentName}`;
+      
+      const now = new Date();
+      document.getElementById("result-timestamp").innerText = `Diselesaikan pada: ${now.toLocaleDateString('id-ID')} pukul ${now.toLocaleTimeString('id-ID')}`;
+      document.getElementById("result-pg-score").innerText = `${pgCorrect} / 10`;
+      document.getElementById("result-match-score").innerText = `${matchCorrect} / 5`;
+      document.getElementById("result-total-score").innerText = `${finalScore}`;
+
+      const feedbackContainer = document.getElementById("result-feedback-container");
+      let message = "";
+      if(finalScore >= 85) {
+        message = `<div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs">
+          <b>Predikat: Amat Baik (Tuntas Unggul).</b> Ananda sangat memahami materi ruang, peta, serta keterkaitan ekonomi. Siap ditugaskan menjadi tutor sebaya!
+        </div>`;
+      } else if(finalScore >= 75) {
+        message = `<div class="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-xs">
+          <b>Predikat: Baik (Tuntas KKM).</b> Nilai memenuhi standar ketuntasan belajar. Penguatan diperlukan pada perhitungan skala dan konsep kelembagaan.
+        </div>`;
+      } else {
+        message = `<div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs">
+          <b>Predikat: Perlu Bimbingan (Remedial).</b> Ananda disarankan mengikuti sesi pengayaan konsep kelangkaan dan komponen peta bersama guru.
+        </div>`;
+      }
+
+      feedbackContainer.innerHTML = message;
+      resultBox.classList.remove("hidden");
+      resultBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // RENDER DASBOR KEPEMIMPINAN
+    function renderLeadershipDashboard() {
+      const tbody = document.getElementById("leadership-table-body");
+      if(!tbody) return;
+      tbody.innerHTML = "";
+
+      let totalScoreSum = 0;
+      let completedCount = 0;
+
+      studentsData.forEach(item => {
+        totalScoreSum += item.totalScore;
+        if(item.totalScore > 0) completedCount++;
+
+        let kkmBadge = item.totalScore >= 75 
+          ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[11px]">TUNTAS</span>`
+          : `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-full font-bold text-[11px]">REMEDIAL</span>`;
+
+        let rekom = "Pengayaan mandiri";
+        if(item.totalScore === 100) rekom = "Dicalonkan sebagai Duta Belajar IPS Kelas 7";
+        else if(item.totalScore >= 85) rekom = "Pengayaan konsep interaksi antarwilayah";
+        else rekom = "Bimbingan terfokus perhitungan matematis skala peta";
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-slate-800">${item.name}</td>
+          <td class="py-3 px-3"><span class="font-medium text-slate-700">${item.status}</span></td>
+          <td class="py-3 px-3 font-semibold text-indigo-700">${item.pgScore}</td>
+          <td class="py-3 px-3 font-semibold text-purple-700">${item.matchScore}</td>
+          <td class="py-3 px-3 font-black text-slate-800">${item.totalScore}</td>
+          <td class="py-3 px-3">${kkmBadge}</td>
+          <td class="py-3 px-3 text-slate-600">${rekom}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const avg = (totalScoreSum / studentsData.length).toFixed(1);
+      document.getElementById("kpi-avg-score").innerText = avg;
+
+      const attendPresent = studentsData.filter(s => s.status === "Hadir").length;
+      const attendRate = Math.round((attendPresent / studentsData.length) * 100);
+      document.getElementById("kpi-attendance-rate").innerText = `${attendRate}%`;
+
+      const compRate = Math.round((completedCount / studentsData.length) * 100);
+      document.getElementById("kpi-completion-rate").innerText = `${compRate}%`;
+    }
+  </script>
+</body>
+</html>
